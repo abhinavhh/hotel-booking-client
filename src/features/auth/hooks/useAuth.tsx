@@ -93,7 +93,7 @@ export const useAuth = () => {
   const register = async (data: {
     email: string;
     password: string;
-    name: string;
+    username: string;
   }) => {
     setAuthState((prev) => ({
       ...prev,
@@ -103,14 +103,8 @@ export const useAuth = () => {
 
     try {
       const response = await api.post("/auth/register", data);
-      const { token, user } = response.data;
-
-      if (!token) {
-        throw new Error("Token not found in response");
-      }
-
-      localStorage.setItem("token", token);
-
+      const { user } = response.data;
+      const token = null;
       setAuthState({
         isLoading: false,
         error: null,
