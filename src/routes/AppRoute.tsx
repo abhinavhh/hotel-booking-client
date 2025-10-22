@@ -4,6 +4,9 @@ import LoginPage from "../pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import { DashboardPage } from "@/pages/DashboardPage";
+import { ProfilePage } from "@/features/profiles/components/ProfilePage";
+import { HotelsPage } from "@/features/hotels";
+import { BookingsPage } from "@/features/bookings";
 
 export default function AppRoutes() {
   return (
@@ -15,6 +18,9 @@ export default function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         {/* <Route path="/dashboard" element={<Dashboard />} /> */}
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/hotels" element={<HotelsPage />} />
+        <Route path="/bookings" element={<BookingsPage />} />
       </Route>
 
       {/* 404 fallback */}

@@ -35,9 +35,8 @@ export const LoginForm: React.FC = () => {
 
       // Optionally redirect or handle success
       if (result.success) {
-        console.log("Login successful!", result.user);
         // You can redirect here if needed:
-        // window.location.href = "/dashboard";
+        window.location.href = "/dashboard";
         // or use React Router: navigate("/dashboard");
       }
     }
