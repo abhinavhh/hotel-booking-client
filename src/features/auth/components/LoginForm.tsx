@@ -166,15 +166,11 @@ export const LoginForm: React.FC = () => {
                 />
                 <span className="text-muted-foreground">Remember me</span>
               </label>
-              <a
-                href="#"
-                className="text-primary hover:underline"
-                onClick={(e) => {
-                  if (isLoading) e.preventDefault();
-                }}
-              >
-                Forgot password?
-              </a>
+              <Link to="/forgot-password">
+                <span className="text-primary hover:underline">
+                  Forgot password?
+                </span>
+              </Link>
             </div>
 
             <Button

@@ -26,20 +26,15 @@ export const useAuth = () => {
     }));
 
     try {
-      // Real backend call
       const response = await api.post("/auth/login", formData);
-
-      // Extract token and user from response
       const { token, user } = response.data;
 
       if (!token) {
         throw new Error("Token not found in response");
       }
 
-      // Save token to localStorage
       localStorage.setItem("token", token);
 
-      // Update auth state
       setAuthState({
         isLoading: false,
         error: null,
@@ -50,20 +45,16 @@ export const useAuth = () => {
 
       return { success: true, token, user };
     } catch (err: any) {
-      // Handle different error types
       let errorMessage = "Login failed. Please try again.";
 
       if (err.response) {
-        // Backend returned an error response
         errorMessage =
           err.response.data?.message ||
           err.response.data?.error ||
           errorMessage;
       } else if (err.request) {
-        // Request was made but no response received
         errorMessage = "No response from server. Please check your connection.";
       } else {
-        // Something else happened
         errorMessage = err.message || errorMessage;
       }
 
@@ -105,6 +96,7 @@ export const useAuth = () => {
       const response = await api.post("/auth/register", data);
       const { user } = response.data;
       const token = null;
+
       setAuthState({
         isLoading: false,
         error: null,
@@ -140,11 +132,154 @@ export const useAuth = () => {
     }
   };
 
+  const sendOTP = async (email: string) => {
+    setAuthState((prev) => ({
+      ...prev,
+      isLoading: true,
+      error: null,
+    }));
+
+    try {
+      const response = await api.post("/auth/forgot-password", { email });
+
+      setAuthState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: null,
+      }));
+
+      return {
+        success: true,
+        message: response.data?.message || "OTP sent to your email",
+      };
+    } catch (err: any) {
+      let errorMessage = "Failed to send OTP. Please try again.";
+
+      if (err.response) {
+        errorMessage =
+          err.response.data?.message ||
+          err.response.data?.error ||
+          errorMessage;
+      } else if (err.request) {
+        errorMessage = "No response from server. Please check your connection.";
+      } else {
+        errorMessage = err.message || errorMessage;
+      }
+
+      setAuthState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: errorMessage,
+      }));
+
+      return { success: false, error: errorMessage };
+    }
+  };
+
+  const verifyOTP = async (email: string, otp: string) => {
+    setAuthState((prev) => ({
+      ...prev,
+      isLoading: true,
+      error: null,
+    }));
+
+    try {
+      const response = await api.post("/auth/verify-otp", { email, otp });
+
+      setAuthState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: null,
+      }));
+
+      return {
+        success: true,
+        message: response.data?.message || "OTP verified successfully",
+      };
+    } catch (err: any) {
+      let errorMessage = "Invalid OTP. Please try again.";
+
+      if (err.response) {
+        errorMessage =
+          err.response.data?.message ||
+          err.response.data?.error ||
+          errorMessage;
+      } else if (err.request) {
+        errorMessage = "No response from server. Please check your connection.";
+      } else {
+        errorMessage = err.message || errorMessage;
+      }
+
+      setAuthState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: errorMessage,
+      }));
+
+      return { success: false, error: errorMessage };
+    }
+  };
+
+  const resetPassword = async (
+    email: string,
+    otp: string,
+    newPassword: string
+  ) => {
+    setAuthState((prev) => ({
+      ...prev,
+      isLoading: true,
+      error: null,
+    }));
+
+    try {
+      const response = await api.post("/auth/reset-password", {
+        email,
+        otp,
+        newPassword,
+      });
+
+      setAuthState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: null,
+      }));
+
+      return {
+        success: true,
+        message: response.data?.message || "Password reset successfully",
+      };
+    } catch (err: any) {
+      let errorMessage = "Failed to reset password. Please try again.";
+
+      if (err.response) {
+        errorMessage =
+          err.response.data?.message ||
+          err.response.data?.error ||
+          errorMessage;
+      } else if (err.request) {
+        errorMessage = "No response from server. Please check your connection.";
+      } else {
+        errorMessage = err.message || errorMessage;
+      }
+
+      setAuthState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: errorMessage,
+      }));
+
+      return { success: false, error: errorMessage };
+    }
+  };
+
   return {
     ...authState,
     login,
     logout,
     register,
+    sendOTP,
+    verifyOTP,
+    resetPassword,
   };
 };
 
@@ -181,6 +316,22 @@ export const useFormValidation = () => {
     return true;
   };
 
+  const validateOTP = (otp: string): boolean => {
+    if (!otp) {
+      setErrors((prev) => ({ ...prev, otp: "OTP is required" }));
+      return false;
+    }
+    if (otp.length !== 6 || !/^\d+$/.test(otp)) {
+      setErrors((prev) => ({
+        ...prev,
+        otp: "OTP must be 6 digits",
+      }));
+      return false;
+    }
+    setErrors((prev) => ({ ...prev, otp: "" }));
+    return true;
+  };
+
   const clearErrors = () => {
     setErrors({});
   };
@@ -189,6 +340,7 @@ export const useFormValidation = () => {
     errors,
     validateEmail,
     validatePassword,
+    validateOTP,
     clearErrors,
   };
 };
