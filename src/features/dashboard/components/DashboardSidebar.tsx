@@ -10,6 +10,7 @@ import {
   Hotel,
 } from "lucide-react";
 import { useAuth } from "../../auth/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 interface NavItem {
   name: string;
@@ -29,7 +30,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { logout } = useAuth();
-
+  const navigation = useNavigate();
   const navItems: NavItem[] = [
     {
       name: "Dashboard",
@@ -61,7 +62,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     if (onNavigate) {
       onNavigate(path);
     } else {
-      window.location.href = path;
+      navigation(path);
     }
     setIsMobileMenuOpen(false);
   };

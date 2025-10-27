@@ -12,7 +12,7 @@ import { HotelDetailPage } from "@/features/hotels/components/HotelDetails";
 export default function AppRoutes() {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
+      <Route path="/" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       {/* Protected routes */}

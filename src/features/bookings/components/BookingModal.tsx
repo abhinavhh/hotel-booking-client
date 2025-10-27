@@ -7,11 +7,11 @@ import {
   DollarSign,
   AlertCircle,
   CheckCircle,
-  Loader,
 } from "lucide-react";
 import { useBooking } from "../../hotels/hooks/useHotels";
+import { PaymentButton } from "../../payment/components/PaymentButton";
 import { Button } from "../../../components/ui/Button";
-import { Input } from "../../../components/ui/Input";
+// import { Input } from "../../../components/ui/Input";
 
 interface BookingModalProps {
   hotel: any;
@@ -33,6 +33,10 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [bookingStep, setBookingStep] = useState<"details" | "payment">(
+    "details"
+  );
+  const [createdBookingId, setCreatedBookingId] = useState<string>("");
   const [nights, setNights] = useState(0);
   const [totalPrice, setTotalPrice] = useState(0);
 
@@ -101,7 +105,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     return true;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleProceedToPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -109,6 +113,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       return;
     }
 
+    // Create booking with "Pending" status
     const result = await createBooking({
       hotelId: hotel.id,
       roomId: room.id,
@@ -119,13 +124,24 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     });
 
     if (result.success) {
-      setSuccess(true);
-      setTimeout(() => {
-        window.location.href = "/bookings";
-      }, 2000);
+      setCreatedBookingId(result.booking.id);
+      setBookingStep("payment");
     } else {
       setError(result.error || "Failed to create booking");
     }
+  };
+
+  const handlePaymentSuccess = (response: any) => {
+    console.log("Payment successful:", response);
+    setSuccess(true);
+    setTimeout(() => {
+      window.location.href = "/bookings";
+    }, 2000);
+  };
+
+  const handlePaymentFailure = (error: any) => {
+    console.error("Payment failed:", error);
+    setError(error.description || "Payment failed. Please try again.");
   };
 
   const getTomorrowDate = () => {
@@ -163,7 +179,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
           <div className="sticky top-0 bg-card/95 backdrop-blur-xl border-b border-border p-6 flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold text-foreground">
-                Complete Your Booking
+                {bookingStep === "details"
+                  ? "Complete Your Booking"
+                  : "Complete Payment"}
               </h2>
               <p className="text-muted-foreground mt-1">
                 {hotel.name} - {room.type}
@@ -187,22 +205,24 @@ export const BookingModal: React.FC<BookingModalProps> = ({
               >
                 <CheckCircle className="w-20 h-20 mx-auto text-green-500 mb-4" />
                 <h3 className="text-2xl font-bold text-foreground mb-2">
-                  Booking Confirmed!
+                  Payment Successful!
                 </h3>
                 <p className="text-muted-foreground mb-4">
-                  Your booking has been successfully created.
+                  Your booking has been confirmed.
                 </p>
                 <p className="text-sm text-muted-foreground">
                   Redirecting to your bookings...
                 </p>
               </motion.div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-6">
+            ) : bookingStep === "details" ? (
+              <form onSubmit={handleProceedToPayment} className="space-y-6">
                 {/* Room Info */}
                 <div className="bg-background rounded-xl p-4 border border-border">
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="font-semibold text-foreground">{room.type}</p>
+                      <p className="font-semibold text-foreground">
+                        {room.type}
+                      </p>
                       <p className="text-sm text-muted-foreground mt-1">
                         {room.description}
                       </p>
@@ -218,7 +238,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                     <div className="text-right">
                       <p className="text-sm text-muted-foreground">Per night</p>
                       <p className="text-2xl font-bold text-primary">
-                        ${room.price}
+                        ₹{room.price}
                       </p>
                     </div>
                   </div>
@@ -318,10 +338,10 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">
-                          ${room.price} × {nights} nights
+                          ₹{room.price} × {nights} nights
                         </span>
                         <span className="text-foreground font-medium">
-                          ${room.price * nights}
+                          ₹{room.price * nights}
                         </span>
                       </div>
                       <div className="border-t border-primary/20 pt-2 flex justify-between">
@@ -329,7 +349,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                           Total
                         </span>
                         <span className="text-2xl font-bold text-primary">
-                          ${totalPrice}
+                          ₹{totalPrice}
                         </span>
                       </div>
                     </div>
@@ -348,7 +368,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                       <p className="text-sm font-medium text-destructive">
                         Booking Error
                       </p>
-                      <p className="text-sm text-destructive/80 mt-1">{error}</p>
+                      <p className="text-sm text-destructive/80 mt-1">
+                        {error}
+                      </p>
                     </div>
                   </motion.div>
                 )}
@@ -381,17 +403,109 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                     size="lg"
                     disabled={isBooking || nights === 0}
                     isLoading={isBooking}
-                    icon={
-                      !isBooking && <DollarSign className="w-5 h-5" />
-                    }
+                    icon={!isBooking && <DollarSign className="w-5 h-5" />}
                     className="flex-1"
                   >
-                    {isBooking
-                      ? "Processing..."
-                      : `Confirm & Pay ${totalPrice}`}
+                    {isBooking ? "Processing..." : "Proceed to Payment"}
                   </Button>
                 </div>
               </form>
+            ) : (
+              /* Payment Step */
+              <div className="space-y-6">
+                {/* Booking Summary */}
+                <div className="bg-primary/5 rounded-xl p-6 border border-primary/20">
+                  <h3 className="font-semibold text-foreground mb-4">
+                    Booking Summary
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Hotel</span>
+                      <span className="text-foreground font-medium">
+                        {hotel.name}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Room Type</span>
+                      <span className="text-foreground font-medium">
+                        {room.type}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Check-in</span>
+                      <span className="text-foreground font-medium">
+                        {new Date(bookingData.checkIn).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Check-out</span>
+                      <span className="text-foreground font-medium">
+                        {new Date(bookingData.checkOut).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Guests</span>
+                      <span className="text-foreground font-medium">
+                        {bookingData.guests}
+                      </span>
+                    </div>
+                    <div className="border-t border-primary/20 pt-3 flex justify-between">
+                      <span className="font-semibold text-foreground text-lg">
+                        Total Amount
+                      </span>
+                      <span className="text-2xl font-bold text-primary">
+                        ₹{totalPrice}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Error Message */}
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-destructive/10 border border-destructive/20 rounded-xl p-4 flex items-start gap-3"
+                  >
+                    <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-destructive">
+                        Payment Error
+                      </p>
+                      <p className="text-sm text-destructive/80 mt-1">
+                        {error}
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Payment Info */}
+                <div className="bg-background rounded-xl p-4 border border-border">
+                  <p className="text-sm text-muted-foreground">
+                    🔒 Your payment is secure and encrypted. You will be
+                    redirected to Razorpay payment gateway.
+                  </p>
+                </div>
+
+                {/* Payment Button */}
+                <PaymentButton
+                  amount={totalPrice}
+                  bookingId={createdBookingId}
+                  onSuccess={handlePaymentSuccess}
+                  onFailure={handlePaymentFailure}
+                />
+
+                {/* Back Button */}
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="lg"
+                  onClick={() => setBookingStep("details")}
+                  className="w-full"
+                >
+                  Back to Details
+                </Button>
+              </div>
             )}
           </div>
         </motion.div>
