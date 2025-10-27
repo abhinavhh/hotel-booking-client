@@ -23,6 +23,7 @@ export interface Hotel {
   pricePerNight: number;
   featured?: boolean;
   cancellationPolicy?: string;
+  reviews?: Review[];
 }
 
 export interface Room {
@@ -55,6 +56,14 @@ export interface BookingData {
   specialRequests?: string;
 }
 
+export interface Review {
+  id: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  date: string;
+}
+
 export const useHotels = () => {
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [filteredHotels, setFilteredHotels] = useState<Hotel[]>([]);
@@ -68,12 +77,17 @@ export const useHotels = () => {
 
     try {
       const params = new URLSearchParams();
-      
-      if (searchFilters?.location) params.append("location", searchFilters.location);
-      if (searchFilters?.minPrice) params.append("minPrice", searchFilters.minPrice.toString());
-      if (searchFilters?.maxPrice) params.append("maxPrice", searchFilters.maxPrice.toString());
-      if (searchFilters?.rating) params.append("rating", searchFilters.rating.toString());
-      if (searchFilters?.guests) params.append("guests", searchFilters.guests.toString());
+
+      if (searchFilters?.location)
+        params.append("location", searchFilters.location);
+      if (searchFilters?.minPrice)
+        params.append("minPrice", searchFilters.minPrice.toString());
+      if (searchFilters?.maxPrice)
+        params.append("maxPrice", searchFilters.maxPrice.toString());
+      if (searchFilters?.rating)
+        params.append("rating", searchFilters.rating.toString());
+      if (searchFilters?.guests)
+        params.append("guests", searchFilters.guests.toString());
       if (searchFilters?.sortBy) params.append("sortBy", searchFilters.sortBy);
 
       const response = await api.get(`/hotels?${params.toString()}`);
@@ -96,10 +110,14 @@ export const useHotels = () => {
 
     // Filter by price range
     if (filters.minPrice !== undefined) {
-      filtered = filtered.filter((hotel) => hotel.pricePerNight >= filters.minPrice!);
+      filtered = filtered.filter(
+        (hotel) => hotel.pricePerNight >= filters.minPrice!
+      );
     }
     if (filters.maxPrice !== undefined) {
-      filtered = filtered.filter((hotel) => hotel.pricePerNight <= filters.maxPrice!);
+      filtered = filtered.filter(
+        (hotel) => hotel.pricePerNight <= filters.maxPrice!
+      );
     }
 
     // Filter by rating
