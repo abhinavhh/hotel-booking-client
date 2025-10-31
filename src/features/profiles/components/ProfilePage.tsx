@@ -252,9 +252,9 @@ export const ProfilePage: React.FC = () => {
                 <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white text-3xl font-bold overflow-hidden">
                   {profile?.avatar ? (
                     <img
-                      src={profile.avatar}
+                      src={`http://localhost:5000${profile.avatar}`}
                       alt={profile.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-center"
                     />
                   ) : (
                     profile?.name?.charAt(0).toUpperCase()
