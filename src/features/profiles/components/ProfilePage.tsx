@@ -25,7 +25,6 @@ export const ProfilePage: React.FC = () => {
   const {
     profile,
     isLoading,
-    error,
     isUpdating,
     updateProfile,
     changePassword,

@@ -8,6 +8,7 @@ import { ProfilePage } from "@/features/profiles/components/ProfilePage";
 import { HotelsPage } from "@/features/hotels";
 import { BookingsPage } from "@/features/bookings";
 import { HotelDetailPage } from "@/features/hotels/components/HotelDetails";
+import { BookingDetail } from "@/features/bookings/components/BookingDetail";
 
 export default function AppRoutes() {
   return (
@@ -23,7 +24,7 @@ export default function AppRoutes() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/hotels" element={<HotelsPage />} />
         <Route path="/bookings" element={<BookingsPage />} />
-        <Route path="/bookings/:id" element={<BookingsPage />} />
+        <Route path="/bookings/:id" element={<BookingDetail />} />
         <Route path="/hotels/:id" element={<HotelDetailPage />} />
       </Route>
 
