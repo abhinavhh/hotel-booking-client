@@ -45,12 +45,16 @@ const AdminSettingsPage: React.FC = () => {
   const handleChange = (section: keyof Settings, field: string, value: any) => {
     if (!localSettings) return;
 
-    setLocalSettings({
-      ...localSettings,
-      [section]: {
-        ...localSettings[section],
-        [field]: value,
-      },
+    setLocalSettings((prev) => {
+      if (!prev) return prev;
+      const sectionObj = (prev[section] as Record<string, any>) || {};
+      return {
+        ...prev,
+        [section]: {
+          ...sectionObj,
+          [field]: value,
+        },
+      } as Settings;
     });
   };
 
@@ -798,7 +802,7 @@ const AdminSettingsPage: React.FC = () => {
                           <input
                             type="checkbox"
                             checked={
-                              localSettings.security?.requireSpecialChars ||
+                              localSettings.security?.requireSpecialChar ||
                               false
                             }
                             onChange={(e) =>
