@@ -34,7 +34,7 @@ export const useAuth = () => {
       }
 
       localStorage.setItem("token", token);
-
+      localStorage.setItem("userRole", user.role);
       setAuthState({
         isLoading: false,
         error: null,
