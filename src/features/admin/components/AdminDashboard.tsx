@@ -30,7 +30,7 @@ import {
 } from "recharts";
 
 export const AdminDashboard: React.FC = () => {
-  const { data, loading, error, refetch } = useAdminDashboard();
+  const { data, loading, refetch } = useAdminDashboard();
 
   // ✅ Safely pull data with fallbacks
   const stats = data?.stats ?? {

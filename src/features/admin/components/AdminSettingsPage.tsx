@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Save,
   Mail,
@@ -8,89 +8,62 @@ import {
   Bell,
   Shield,
   Globe,
-  Database,
-  Key,
 } from "lucide-react";
 import { AdminSidebar } from "../components/AdminSidebar";
+import { useAdminSettings } from "../hooks/useAdmin";
+import type { Settings } from "../types/admin.types";
 
-const AdminSettingsPage = () => {
+const AdminSettingsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("general");
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [localSettings, setLocalSettings] = useState<Settings | null>(null);
 
-  // Settings state
-  const [settings, setSettings] = useState({
-    general: {
-      siteName: "HotelBooking Pro",
-      siteUrl: "https://hotelbooking.com",
-      supportEmail: "support@hotelbooking.com",
-      currency: "INR",
-      timezone: "Asia/Kolkata",
-      language: "en",
-    },
-    email: {
-      provider: "smtp",
-      smtpHost: "smtp.gmail.com",
-      smtpPort: "587",
-      smtpUser: "",
-      smtpPassword: "",
-      fromEmail: "noreply@hotelbooking.com",
-      fromName: "HotelBooking Pro",
-    },
-    payment: {
-      stripeEnabled: true,
-      stripePublicKey: "",
-      stripeSecretKey: "",
-      paypalEnabled: false,
-      paypalClientId: "",
-      paypalSecret: "",
-      razorpayEnabled: true,
-      razorpayKeyId: "",
-      razorpayKeySecret: "",
-    },
-    commission: {
-      platformFee: 10,
-      taxRate: 18,
-      cancellationFee: 5,
-      refundProcessingDays: 7,
-    },
-    notifications: {
-      emailNotifications: true,
-      smsNotifications: false,
-      pushNotifications: true,
-      bookingConfirmation: true,
-      paymentReceived: true,
-      cancellationNotice: true,
-      reviewReminder: true,
-    },
-    security: {
-      twoFactorAuth: false,
-      sessionTimeout: 30,
-      maxLoginAttempts: 5,
-      passwordMinLength: 8,
-      requireSpecialChar: true,
-      requireNumbers: true,
-    },
-  });
+  const { settings, loading, error, updateSettings } = useAdminSettings();
+
+  useEffect(() => {
+    if (settings) {
+      setLocalSettings(settings);
+    }
+  }, [settings]);
 
   const handleSave = async () => {
+    if (!localSettings) return;
+
     setSaving(true);
-    // Simulate API call
-    setTimeout(() => {
-      setSaving(false);
+    const result = await updateSettings(localSettings);
+    setSaving(false);
+
+    if (result.success) {
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
-    }, 1000);
+    } else {
+      alert(result.error || "Failed to save settings");
+    }
   };
 
-  const handleChange = (section, field, value) => {
-    setSettings((prev) => ({
-      ...prev,
+  const handleChange = (section: keyof Settings, field: string, value: any) => {
+    if (!localSettings) return;
+
+    setLocalSettings({
+      ...localSettings,
       [section]: {
-        ...prev[section],
+        ...localSettings[section],
         [field]: value,
       },
-    }));
+    });
+  };
+
+  const getNotificationDescription = (key: string): string => {
+    const descriptions: Record<string, string> = {
+      emailNotifications: "Receive email notifications for important events",
+      bookingConfirmation: "Send confirmation emails for new bookings",
+      paymentReceived: "Notify when payments are received",
+      cancellationAlerts: "Alert on booking cancellations",
+      reviewSubmitted: "Notify when new reviews are submitted",
+      systemUpdates: "Receive notifications about system updates",
+    };
+    return descriptions[key] || "Enable or disable this notification type";
   };
 
   const tabs = [
@@ -102,6 +75,33 @@ const AdminSettingsPage = () => {
     { id: "security", name: "Security", icon: Shield },
   ];
 
+  if (loading) {
+    return (
+      <div className="flex min-h-screen bg-gray-50">
+        <AdminSidebar />
+        <div className="flex-1 lg:ml-64 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading settings...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !localSettings) {
+    return (
+      <div className="flex min-h-screen bg-gray-50">
+        <AdminSidebar />
+        <div className="flex-1 lg:ml-64 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-600">{error || "Failed to load settings"}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       <AdminSidebar />
@@ -109,11 +109,23 @@ const AdminSettingsPage = () => {
       <div className="flex-1 lg:ml-64">
         <div className="p-8">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Settings</h1>
-            <p className="text-gray-600">
-              Manage your platform configuration and preferences
-            </p>
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Settings
+              </h1>
+              <p className="text-gray-600">
+                Manage your platform configuration and preferences
+              </p>
+            </div>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+            >
+              <Save className="w-5 h-5" />
+              {saving ? "Saving..." : "Save Changes"}
+            </button>
           </div>
 
           {/* Success Message */}
@@ -160,11 +172,11 @@ const AdminSettingsPage = () => {
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Site Name
+                          Site Name *
                         </label>
                         <input
                           type="text"
-                          value={settings.general.siteName}
+                          value={localSettings.general.siteName}
                           onChange={(e) =>
                             handleChange("general", "siteName", e.target.value)
                           }
@@ -177,11 +189,12 @@ const AdminSettingsPage = () => {
                         </label>
                         <input
                           type="url"
-                          value={settings.general.siteUrl}
+                          value={localSettings.general.siteUrl || ""}
                           onChange={(e) =>
                             handleChange("general", "siteUrl", e.target.value)
                           }
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="https://example.com"
                         />
                       </div>
                       <div>
@@ -190,7 +203,7 @@ const AdminSettingsPage = () => {
                         </label>
                         <input
                           type="email"
-                          value={settings.general.supportEmail}
+                          value={localSettings.general.supportEmail || ""}
                           onChange={(e) =>
                             handleChange(
                               "general",
@@ -199,15 +212,16 @@ const AdminSettingsPage = () => {
                             )
                           }
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="support@example.com"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Currency
+                            Currency *
                           </label>
                           <select
-                            value={settings.general.currency}
+                            value={localSettings.general.currency}
                             onChange={(e) =>
                               handleChange(
                                 "general",
@@ -225,10 +239,10 @@ const AdminSettingsPage = () => {
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Timezone
+                            Timezone *
                           </label>
                           <select
-                            value={settings.general.timezone}
+                            value={localSettings.general.timezone}
                             onChange={(e) =>
                               handleChange(
                                 "general",
@@ -238,14 +252,38 @@ const AdminSettingsPage = () => {
                             }
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           >
-                            <option value="Asia/Kolkata">Asia/Kolkata</option>
-                            <option value="America/New_York">
-                              America/New York
+                            <option value="Asia/Kolkata">
+                              Asia/Kolkata (IST)
                             </option>
-                            <option value="Europe/London">Europe/London</option>
-                            <option value="Asia/Tokyo">Asia/Tokyo</option>
+                            <option value="America/New_York">
+                              America/New York (EST)
+                            </option>
+                            <option value="Europe/London">
+                              Europe/London (GMT)
+                            </option>
+                            <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
+                            <option value="Australia/Sydney">
+                              Australia/Sydney (AEST)
+                            </option>
                           </select>
                         </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Language
+                        </label>
+                        <select
+                          value={localSettings.general.language || "en"}
+                          onChange={(e) =>
+                            handleChange("general", "language", e.target.value)
+                          }
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          <option value="en">English</option>
+                          <option value="hi">Hindi</option>
+                          <option value="es">Spanish</option>
+                          <option value="fr">French</option>
+                        </select>
                       </div>
                     </div>
                   </div>
@@ -263,7 +301,7 @@ const AdminSettingsPage = () => {
                           Email Provider
                         </label>
                         <select
-                          value={settings.email.provider}
+                          value={localSettings.email?.provider || "smtp"}
                           onChange={(e) =>
                             handleChange("email", "provider", e.target.value)
                           }
@@ -281,10 +319,11 @@ const AdminSettingsPage = () => {
                           </label>
                           <input
                             type="text"
-                            value={settings.email.smtpHost}
+                            value={localSettings.email?.smtpHost || ""}
                             onChange={(e) =>
                               handleChange("email", "smtpHost", e.target.value)
                             }
+                            placeholder="smtp.gmail.com"
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           />
                         </div>
@@ -294,10 +333,11 @@ const AdminSettingsPage = () => {
                           </label>
                           <input
                             type="text"
-                            value={settings.email.smtpPort}
+                            value={localSettings.email?.smtpPort || ""}
                             onChange={(e) =>
                               handleChange("email", "smtpPort", e.target.value)
                             }
+                            placeholder="587"
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           />
                         </div>
@@ -308,7 +348,7 @@ const AdminSettingsPage = () => {
                         </label>
                         <input
                           type="text"
-                          value={settings.email.smtpUser}
+                          value={localSettings.email?.smtpUser || ""}
                           onChange={(e) =>
                             handleChange("email", "smtpUser", e.target.value)
                           }
@@ -321,7 +361,7 @@ const AdminSettingsPage = () => {
                         </label>
                         <input
                           type="password"
-                          value={settings.email.smtpPassword}
+                          value={localSettings.email?.smtpPassword || ""}
                           onChange={(e) =>
                             handleChange(
                               "email",
@@ -340,10 +380,11 @@ const AdminSettingsPage = () => {
                           </label>
                           <input
                             type="email"
-                            value={settings.email.fromEmail}
+                            value={localSettings.email?.fromEmail || ""}
                             onChange={(e) =>
                               handleChange("email", "fromEmail", e.target.value)
                             }
+                            placeholder="noreply@example.com"
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           />
                         </div>
@@ -353,10 +394,11 @@ const AdminSettingsPage = () => {
                           </label>
                           <input
                             type="text"
-                            value={settings.email.fromName}
+                            value={localSettings.email?.fromName || ""}
                             onChange={(e) =>
                               handleChange("email", "fromName", e.target.value)
                             }
+                            placeholder="HotelBooking Pro"
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           />
                         </div>
@@ -384,7 +426,9 @@ const AdminSettingsPage = () => {
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input
                               type="checkbox"
-                              checked={settings.payment.stripeEnabled}
+                              checked={
+                                localSettings.payment?.stripeEnabled || false
+                              }
                               onChange={(e) =>
                                 handleChange(
                                   "payment",
@@ -401,7 +445,7 @@ const AdminSettingsPage = () => {
                           <input
                             type="text"
                             placeholder="Stripe Public Key"
-                            value={settings.payment.stripePublicKey}
+                            value={localSettings.payment?.stripePublicKey || ""}
                             onChange={(e) =>
                               handleChange(
                                 "payment",
@@ -414,7 +458,7 @@ const AdminSettingsPage = () => {
                           <input
                             type="password"
                             placeholder="Stripe Secret Key"
-                            value={settings.payment.stripeSecretKey}
+                            value={localSettings.payment?.stripeSecretKey || ""}
                             onChange={(e) =>
                               handleChange(
                                 "payment",
@@ -439,7 +483,9 @@ const AdminSettingsPage = () => {
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input
                               type="checkbox"
-                              checked={settings.payment.razorpayEnabled}
+                              checked={
+                                localSettings.payment?.razorpayEnabled || false
+                              }
                               onChange={(e) =>
                                 handleChange(
                                   "payment",
@@ -456,7 +502,7 @@ const AdminSettingsPage = () => {
                           <input
                             type="text"
                             placeholder="Razorpay Key ID"
-                            value={settings.payment.razorpayKeyId}
+                            value={localSettings.payment?.razorpayKeyId || ""}
                             onChange={(e) =>
                               handleChange(
                                 "payment",
@@ -469,7 +515,9 @@ const AdminSettingsPage = () => {
                           <input
                             type="password"
                             placeholder="Razorpay Key Secret"
-                            value={settings.payment.razorpayKeySecret}
+                            value={
+                              localSettings.payment?.razorpayKeySecret || ""
+                            }
                             onChange={(e) =>
                               handleChange(
                                 "payment",
@@ -494,12 +542,12 @@ const AdminSettingsPage = () => {
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Platform Commission (%)
+                          Platform Commission (%) *
                         </label>
                         <div className="relative">
                           <input
                             type="number"
-                            value={settings.commission.platformFee}
+                            value={localSettings.commission.platformFee}
                             onChange={(e) =>
                               handleChange(
                                 "commission",
@@ -520,12 +568,12 @@ const AdminSettingsPage = () => {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Tax Rate (%)
+                          Tax Rate (%) *
                         </label>
                         <div className="relative">
                           <input
                             type="number"
-                            value={settings.commission.taxRate}
+                            value={localSettings.commission.taxRate}
                             onChange={(e) =>
                               handleChange(
                                 "commission",
@@ -551,7 +599,9 @@ const AdminSettingsPage = () => {
                         <div className="relative">
                           <input
                             type="number"
-                            value={settings.commission.cancellationFee}
+                            value={
+                              localSettings.commission.cancellationFee || 0
+                            }
                             onChange={(e) =>
                               handleChange(
                                 "commission",
@@ -576,7 +626,9 @@ const AdminSettingsPage = () => {
                         </label>
                         <input
                           type="number"
-                          value={settings.commission.refundProcessingDays}
+                          value={
+                            localSettings.commission.refundProcessingDays || 7
+                          }
                           onChange={(e) =>
                             handleChange(
                               "commission",
@@ -603,7 +655,7 @@ const AdminSettingsPage = () => {
                       Notification Preferences
                     </h2>
                     <div className="space-y-4">
-                      {Object.entries(settings.notifications).map(
+                      {Object.entries(localSettings.notifications || {}).map(
                         ([key, value]) => (
                           <div
                             key={key}
@@ -617,26 +669,13 @@ const AdminSettingsPage = () => {
                                   .replace(/^./, (str) => str.toUpperCase())}
                               </p>
                               <p className="text-sm text-gray-500">
-                                {key === "emailNotifications" &&
-                                  "Send email notifications to users"}
-                                {key === "smsNotifications" &&
-                                  "Send SMS notifications to users"}
-                                {key === "pushNotifications" &&
-                                  "Send push notifications to mobile apps"}
-                                {key === "bookingConfirmation" &&
-                                  "Notify users when booking is confirmed"}
-                                {key === "paymentReceived" &&
-                                  "Notify users when payment is received"}
-                                {key === "cancellationNotice" &&
-                                  "Notify users about cancellations"}
-                                {key === "reviewReminder" &&
-                                  "Remind users to leave reviews"}
+                                {getNotificationDescription(key)}
                               </p>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
                               <input
                                 type="checkbox"
-                                checked={value}
+                                checked={value as boolean}
                                 onChange={(e) =>
                                   handleChange(
                                     "notifications",
@@ -674,7 +713,9 @@ const AdminSettingsPage = () => {
                         <label className="relative inline-flex items-center cursor-pointer">
                           <input
                             type="checkbox"
-                            checked={settings.security.twoFactorAuth}
+                            checked={
+                              localSettings.security?.twoFactorAuth || false
+                            }
                             onChange={(e) =>
                               handleChange(
                                 "security",
@@ -693,7 +734,7 @@ const AdminSettingsPage = () => {
                         </label>
                         <input
                           type="number"
-                          value={settings.security.sessionTimeout}
+                          value={localSettings.security?.sessionTimeout || 30}
                           onChange={(e) =>
                             handleChange(
                               "security",
@@ -712,7 +753,7 @@ const AdminSettingsPage = () => {
                         </label>
                         <input
                           type="number"
-                          value={settings.security.maxLoginAttempts}
+                          value={localSettings.security?.maxLoginAttempts || 5}
                           onChange={(e) =>
                             handleChange(
                               "security",
@@ -731,7 +772,7 @@ const AdminSettingsPage = () => {
                         </label>
                         <input
                           type="number"
-                          value={settings.security.passwordMinLength}
+                          value={localSettings.security?.passwordMinLength || 8}
                           onChange={(e) =>
                             handleChange(
                               "security",
@@ -750,80 +791,51 @@ const AdminSettingsPage = () => {
                             Require Special Characters
                           </p>
                           <p className="text-sm text-gray-500">
-                            Password must contain special characters
+                            Password must include special characters
                           </p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
                           <input
                             type="checkbox"
-                            checked={settings.security.requireSpecialChar}
+                            checked={
+                              localSettings.security?.requireSpecialChars ||
+                              false
+                            }
                             onChange={(e) =>
                               handleChange(
                                 "security",
-                                "requireSpecialChar",
+                                "requireSpecialChars",
                                 e.target.checked
                               )
                             }
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        </label>
-                      </div>
-                      <div className="flex items-center justify-between py-3 border-b border-gray-200">
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            Require Numbers
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            Password must contain numbers
-                          </p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer"></label>
-                        <input
-                          type="checkbox"
-                          checked={settings.security.requireNumbers}
-                          onChange={(e) =>
-                            handleChange(
-                              "security",
-                              "requireNumbers",
-                              e.target.checked
-                            )
-                          }
-                          className="sr-only peer"
-                        />
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={settings.security.requireNumbers}
-                            onChange={(e) =>
-                              handleChange(
-                                "security",
-                                "requireNumbers",
-                                e.target.checked
-                              )
-                            }
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                          <div
+                            className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300
+                              rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white
+                              after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300
+                              after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"
+                          ></div>
                         </label>
                       </div>
                     </div>
                   </div>
                 )}
               </div>
-
-              {/* Save Button */}
-              <div className="mt-6 flex justify-end">
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Save className="w-5 h-5" />
-                  {saving ? "Saving..." : "Save Settings"}
-                </button>
-              </div>
             </div>
+          </div>
+
+          {/* Footer Save Button for Mobile */}
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t p-4">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg
+                       hover:bg-blue-700 transition-colors disabled:opacity-50"
+            >
+              <Save className="w-5 h-5" />
+              {saving ? "Saving..." : "Save Changes"}
+            </button>
           </div>
         </div>
       </div>
