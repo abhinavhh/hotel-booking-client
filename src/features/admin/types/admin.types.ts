@@ -55,7 +55,7 @@ export interface DashboardData {
 }
 
 export interface AdminHotel {
-  _id: string;
+  id: string;
   name: string;
   description: string;
   images: string[];

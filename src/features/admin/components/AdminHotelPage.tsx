@@ -17,7 +17,7 @@ import { useAdminHotels } from "../hooks/useAdmin";
 import { Button } from "../../../components/ui/Button";
 
 export const AdminHotelsPage: React.FC = () => {
-  const { hotels, isLoading, error, deleteHotel, refreshHotels } = useAdminHotels();
+  const { hotels, loading, error, deleteHotel, refetch } = useAdminHotels();
   const [searchQuery, setSearchQuery] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -66,9 +66,9 @@ export const AdminHotelsPage: React.FC = () => {
                 <Button
                   variant="secondary"
                   size="md"
-                  onClick={refreshHotels}
+                  onClick={refetch}
                   icon={<RefreshCw className="w-4 h-4" />}
-                  disabled={isLoading}
+                  disabled={loading}
                 >
                   Refresh
                 </Button>
@@ -116,7 +116,7 @@ export const AdminHotelsPage: React.FC = () => {
           )}
 
           {/* Hotels Table/Grid */}
-          {isLoading ? (
+          {loading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
                 <div
