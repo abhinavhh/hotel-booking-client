@@ -29,15 +29,16 @@ export const LoginForm: React.FC = () => {
 
     const isEmailValid = validateEmail(formData.email);
     const isPasswordValid = validatePassword(formData.password);
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
     if (isEmailValid && isPasswordValid) {
       const result = await login(formData);
 
       // Optionally redirect or handle success
       if (result.success) {
         // You can redirect here if needed:
-        navigate("/dashboard");
+        // navigate("/dashboard");
         // or use React Router: navigate("/dashboard");
+        console.log("success login");
       }
     }
   };

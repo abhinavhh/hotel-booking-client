@@ -1,5 +1,6 @@
 import { useState } from "react";
 import api from "../../../lib/api";
+import { useNavigate } from "react-router-dom";
 
 interface AuthState {
   isLoading: boolean;
@@ -17,7 +18,7 @@ export const useAuth = () => {
     token: localStorage.getItem("token"),
     user: null,
   });
-
+  const navigate = useNavigate();
   const login = async (formData: Record<string, any>) => {
     setAuthState((prev) => ({
       ...prev,
@@ -44,6 +45,7 @@ export const useAuth = () => {
       });
 
       return { success: true, token, user };
+      navigate("/dahsboard");
     } catch (err: any) {
       let errorMessage = "Login failed. Please try again.";
 
