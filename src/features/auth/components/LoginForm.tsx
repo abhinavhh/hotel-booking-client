@@ -5,7 +5,7 @@ import { useAuth, useFormValidation } from "../hooks/useAuth";
 import { Input } from "../../../components/ui/Input";
 import { Button } from "../../../components/ui/Button";
 import { slideUp, staggerContainer } from "../../../Animations/animation";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 export const LoginForm: React.FC = () => {
   const [formData, setFormData] = useState({
