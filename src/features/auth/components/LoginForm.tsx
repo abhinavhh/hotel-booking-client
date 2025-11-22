@@ -5,7 +5,7 @@ import { useAuth, useFormValidation } from "../hooks/useAuth";
 import { Input } from "../../../components/ui/Input";
 import { Button } from "../../../components/ui/Button";
 import { slideUp, staggerContainer } from "../../../Animations/animation";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export const LoginForm: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -29,14 +29,14 @@ export const LoginForm: React.FC = () => {
 
     const isEmailValid = validateEmail(formData.email);
     const isPasswordValid = validatePassword(formData.password);
-
+    const navigate = useNavigate();
     if (isEmailValid && isPasswordValid) {
       const result = await login(formData);
 
       // Optionally redirect or handle success
       if (result.success) {
         // You can redirect here if needed:
-        window.location.href = "/dashboard";
+        navigate("/dashboard");
         // or use React Router: navigate("/dashboard");
       }
     }
