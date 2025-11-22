@@ -9,14 +9,12 @@ import {
   Check,
   Users,
   Bed,
-  X,
 } from "lucide-react";
 import { DashboardSidebar } from "../../dashboard/components/DashboardSidebar";
 import { useHotelDetails } from "../hooks/useHotels";
 import { Button } from "../../../components/ui/Button";
 import { BookingModal } from "../../bookings/components/BookingModal";
 import { useParams } from "react-router-dom";
-
 
 export const HotelDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();

@@ -5,7 +5,6 @@ import {
   Filter,
   MapPin,
   Star,
-  Users,
   Wifi,
   Coffee,
   Dumbbell,
@@ -13,7 +12,6 @@ import {
   Waves,
   UtensilsCrossed,
   Wind,
-  ChevronDown,
   Heart,
   Eye,
 } from "lucide-react";
@@ -22,7 +20,7 @@ import { useHotels } from "../hooks/useHotels";
 import { Button } from "../../../components/ui/Button";
 
 export const HotelsPage: React.FC = () => {
-  const { hotels, isLoading, filters, setFilters, searchHotels } = useHotels();
+  const { hotels, isLoading, searchHotels } = useHotels();
 
   const [searchLocation, setSearchLocation] = useState("");
   const [showFilters, setShowFilters] = useState(false);

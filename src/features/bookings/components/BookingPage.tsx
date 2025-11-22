@@ -7,7 +7,6 @@ import {
   MapPin,
   Users,
   DollarSign,
-  X,
   RefreshCw,
   AlertCircle,
   CheckCircle,
@@ -17,7 +16,6 @@ import {
 import { DashboardSidebar } from "../../dashboard/components/DashboardSidebar";
 import { useBookings } from "../hooks/useBookings";
 import { Button } from "../../../components/ui/Button";
-import { Input } from "../../../components/ui/Input";
 
 export const BookingsPage: React.FC = () => {
   const {
